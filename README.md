@@ -45,7 +45,7 @@ POSTGRES_URL=postgresql://user:password@host:port/database
 
 ## Usage Examples
 
-### Basic Usage
+### Indexing documents
 
 ```bash
 python -i index_documents.py
@@ -53,35 +53,29 @@ python -i index_documents.py
 
 ```python
 >>> index_documents_jupyter('.', 'sentence')
-Processing files in: folder
 Processing: document.pdf
-   Text length: 1234 characters
-   Created 5 chunks
-Indexing completed successfully
+Created 5 chunks
+
+>>> index_documents_jupyter('.', 'fixed')
+>>> index_documents_jupyter('.', 'paragraph')
 
 >>> check_database_status()
-Total chunks in database: 5
+Total chunks: 15
 ```
 
-### Search Example
+### Searching
 
 ```bash
 python -i search_documents.py
 ```
 
 ```python
->>> search_documents_jupyter('artificial intelligence', 3)
-Searching for: 'artificial intelligence'
-Found 5 chunks in database
+>>> search_documents_jupyter('AI', 3)
+Found 15 chunks
 
-Top 3 results:
-1. Similarity: 0.72
-   File: document.pdf
-   Text: AI is used in many applications...
-
-2. Similarity: 0.68
-   File: document.pdf  
-   Text: Machine learning algorithms...
+Results:
+1. Similarity: 0.72 - AI is used in applications...
+2. Similarity: 0.68 - Machine learning...
 ```
 
 ## Running the Scripts
