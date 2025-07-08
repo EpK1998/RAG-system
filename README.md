@@ -43,33 +43,45 @@ POSTGRES_URL=postgresql://user:password@host:port/database
 
 ## Usage
 
-### Document Indexing
+## Usage Examples
 
-Open terminal and run:
+### Basic Usage
 
 ```bash
 python -i index_documents.py
 ```
 
-Then use the functions:
-
 ```python
-index_documents_jupyter('.', 'sentence')
-check_database_status()
+>>> index_documents_jupyter('.', 'sentence')
+Processing files in: folder
+Processing: document.pdf
+   Text length: 1234 characters
+   Created 5 chunks
+Indexing completed successfully
+
+>>> check_database_status()
+Total chunks in database: 5
 ```
 
-### Document Search
-
-Open terminal and run:
+### Search Example
 
 ```bash
 python -i search_documents.py
 ```
 
-Then search:
-
 ```python
-search_documents_jupyter('machine learning', 5)
+>>> search_documents_jupyter('artificial intelligence', 3)
+Searching for: 'artificial intelligence'
+Found 5 chunks in database
+
+Top 3 results:
+1. Similarity: 0.72
+   File: document.pdf
+   Text: AI is used in many applications...
+
+2. Similarity: 0.68
+   File: document.pdf  
+   Text: Machine learning algorithms...
 ```
 
 ## Running the Scripts
