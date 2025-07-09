@@ -35,6 +35,14 @@ def embed_query(query: str) -> list[float]:
 
 def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     """Calculate cosine similarity between two vectors"""
+    # Check if vectors have the same length (embedding-001 vs embedding-004 for exemple)
+    if len(vec1) != len(vec2):
+        raise ValueError(f"Vector lengths do not match: {len(vec1)} vs {len(vec2)}")
+    
+    # Check if vectors are not empty 
+    if len(vec1) == 0:
+        raise ValueError("Cannot calculate similarity for empty vectors")
+    
     a = np.array(vec1)
     b = np.array(vec2)
     
@@ -42,6 +50,7 @@ def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     norm_a = np.linalg.norm(a)
     norm_b = np.linalg.norm(b)
     
+    # Check for zero vectors
     if norm_a == 0 or norm_b == 0:
         return 0.0
     
@@ -153,3 +162,6 @@ def test_search_system():
 print("Search documents module loaded successfully")
 print("Usage: search_documents_jupyter('your_query', 5)")
 print("Test system: test_search_system()")
+
+
+
