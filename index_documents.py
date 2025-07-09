@@ -75,9 +75,30 @@ def fixed_chunks(text: str, size: int = 300, overlap: int = 50):
 
             
 def sentence_chunks(text: str, limit: int = 300):
-    """Sentence-based splitting"""
-    sentences = re.split(r'[.!?]+', text)
-    sentences = [s.strip() for s in sentences if s.strip()]
+    """
+    Sentence-based splitting with proper sentence tokenization.
+    
+    Uses NLTK's trained model to avoid splitting on abbreviations, 
+    file extensions (.env, .txt), and decimal numbers (3.5, $2.99).
+    Falls back to simple regex if NLTK unavailable.
+    """
+    try:
+        # Try to use NLTK's sentence tokenizer (better with complex sentences)
+        from nltk.tokenize import sent_tokenize
+        import nltk
+        
+        # Download punkt if not available
+        try:
+            sentences = sent_tokenize(text)
+        except LookupError:
+            nltk.download('punkt')
+            sentences = sent_tokenize(text)
+            
+    except ImportError:
+        # Fallback to simple regex if NLTK not available
+        print("Warning: NLTK not available, using simple sentence splitting")
+        sentences = re.split(r'[.!?]+', text)
+        sentences = [s.strip() for s in sentences if s.strip()]
     
     buf, count = [], 0
     for s in sentences:
@@ -109,15 +130,66 @@ METHODS = {
 }
 
 def extract_file(path: Path) -> str:
-    """Extract text from PDF or DOCX file"""
+    """
+    Extract text from PDF or DOCX file with proper validation.
+    
+    Checks file existence, readability, and validates format beyond just extension.
+    Handles edge cases like files without extensions or incorrect extensions.
+    """
+    # Check if file exists and is readable
+    if not path.exists():
+        raise FileNotFoundError(f'File not found: {path}')
+    
+    if not path.is_file():
+        raise ValueError(f'Path is not a file: {path}')
+    
+    # Check file size (avoid processing empty or huge files)
+    file_size = path.stat().st_size
+    if file_size == 0:
+        raise ValueError(f'File is empty: {path}')
+    
+    if file_size > 100 * 1024 * 1024:  # 100MB limit
+        raise ValueError(f'File too large ({file_size} bytes): {path}')
+    
     suffix = path.suffix.lower()
-    if suffix == '.pdf':
-        return extract_pdf(str(path))
-    elif suffix == '.docx':
-        doc = Document(path)
-        return '\n'.join(p.text for p in doc.paragraphs)
-    else:
-        raise ValueError(f'Unsupported file type: {suffix}')
+    
+    # Try to detect file type by reading first few bytes if no clear extension
+    if not suffix:
+        try:
+            with open(path, 'rb') as f:
+                header = f.read(8)
+            
+            # PDF magic number
+            if header.startswith(b'%PDF'):
+                suffix = '.pdf'
+            # DOCX magic number (ZIP header)
+            elif header.startswith(b'PK\x03\x04'):
+                suffix = '.docx'
+            else:
+                raise ValueError(f'Cannot determine file type for: {path}')
+        except Exception as e:
+            raise ValueError(f'Error reading file header: {e}')
+    
+    try:
+        if suffix == '.pdf':
+            text = extract_pdf(str(path))
+            if not text.strip():
+                raise ValueError(f'PDF appears to be empty or unreadable: {path}')
+            return text
+            
+        elif suffix in ['.docx', '.doc']:
+            doc = Document(path)
+            text = '\n'.join(p.text for p in doc.paragraphs)
+            if not text.strip():
+                raise ValueError(f'Document appears to be empty: {path}')
+            return text
+            
+        else:
+            raise ValueError(f'Unsupported file type: {suffix}')
+            
+    except Exception as e:
+        # Re-raise with more context
+        raise ValueError(f'Error processing file {path}: {str(e)}')
 
 
 def create_table():
